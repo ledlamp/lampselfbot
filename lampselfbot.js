@@ -1,0 +1,321 @@
+var Discord = require('discord.js');
+var fs = require('fs');
+var child_process = require('child_process');
+var colors = require('colors');
+
+var config = require('./config.json');
+var client = new Discord.Client();
+client.login(config.token);
+client.on('ready', ()=>{
+	client.user.setStatus('invisible');
+});
+
+
+
+
+
+
+
+
+// Commands
+////////////////////////////////////////////////////////////////////////////////
+client.on('message', message => {
+	if (message.author.id !== client.user.id) return;
+
+	var args = message.content.split(' ');
+	var txt = function(i) {return args.slice(i).join(' ');}
+
+	if (message.content.startsWith(config.cmdChar)) {
+        let cmd = args[0].slice(1).toLowerCase();
+		switch (cmd) {
+			
+			case "eval":
+			case ">":{
+				(function(){
+					var output;
+					try {output = eval(txt(1))}
+					catch (error) {output = error}
+					message.channel.send('`'+output+'`', {split:{char:''}});
+				})();
+				break;
+			}
+			/*case ">>": {
+				(new AsyncFunction('message', 'channel', 'guild' , 'send', txt(1)))(message, message.channel, message.guild, function(){message.channel.send.apply(arguments)}).then(
+					res => {
+						if (typeof res == "undefined") return;
+						if (typeof res == "object") {
+							try {
+								res = JSON.stringify(res);
+							} catch(e) {}
+						}
+						message.channel.send('`'+res+'`', {split:{char:''}});
+					},
+					err => {
+						message.channel.send(`\`${err}\``, {split:{char:''}});
+					}
+				);
+				break;
+			}*/ // sux
+			
+			case "exec":
+			case "$": {
+            	child_process.exec(txt(1), function (error, stdout, stderr) {
+					if (error) return message.channel.send(error);
+					if (stdout) message.channel.send('**stdout:** ' + stdout, {split:{char:''}});
+					if (stderr) message.channel.send('**stderr:** ' + stderr, {split:{char:''}});
+				});
+				break;
+			}
+			
+			case "ping": message.channel.send('pong');
+			
+		}
+        
+        /*
+		if (cmd === "ping" ) message.channel.send('pong');
+		if (cmd === ">") {
+			(function(){
+				var output;
+				try {output = eval(txt(1))}
+				catch (error) {output = error}
+				supersay('`'+output+'`', message.channel);
+			})();
+		}
+		if (cmd === "$") {
+			child_process.exec(txt(1), function (error, stdout, stderr) {
+				if (stdout) supersay('**stdout:** ' + stdout, message.channel);
+				if (stderr) supersay('**stderr:** ' + stderr, message.channel);
+			});
+		}*/
+        
+        
+	}
+	
+	// quote feature
+	args.some(arg => {
+		if (!( arg.startsWith('>>') && !isNaN(arg.substr(2)) )) return false;
+		message.channel.messages.fetch(arg.substr(2)).then(quote => {
+			if (!quote) return;
+			const embed = {
+				color: (quote.member && quote.member.colorRole && quote.member.colorRole.color) || undefined,
+				author: {
+					name: (quote.member && quote.member.displayName) || quote.author.username,
+					icon_url: quote.author.avatarURL()
+				},
+				description: quote.content,
+				timestamp: quote.createdAt,
+				image: (quote.attachments.first() && quote.attachments.first().width) ? quote.attachments.first().url : undefined,
+				footer: {
+					text: quote.id
+				}
+			};
+			message.edit(undefined, {embed});
+		});
+		return true;
+	});
+
+});
+
+
+
+// Eval Terminal
+/*var stdin = process.openStdin();
+stdin.addListener("data", function(data) {
+	let input = data.toString().trim();
+	let output;
+	try {
+		output = eval(input);
+	}
+	catch (error) {
+		output = error;
+	}
+	console.log(colors.cyan(output));
+});*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Logging
+////////////////////////////////////////////////////////////////////////////////
+var logpath = "discord.log";
+fs.appendFileSync(logpath, '\n\n\n');
+var log = {
+	log: function (str) {
+		var date = new Date();
+		var timestamp = date.toLocaleDateString() + " " + date.toLocaleTimeString() + " - ";
+		var line = timestamp + str;
+
+//		console.log(line);
+		fs.appendFileSync(logpath, line + '\n');
+	},
+	channel: function (content, channel) {
+		//if (channel.guild && channel.guild.members.array().length > 1000) return;
+		//if (channel.guild && config.ignoredGuilds.includes(channel.guild.id)) return;
+		//if (config.ignoredChannels.includes(channel.id)) return; 
+		//if (channel.parent && config.ignoredChannels.includes(channel.parent.id)) return;
+		//if (channel.muted || (channel.parent && channel.parent.muted) || (channel.guild && channel.guild.muted)) return;
+
+		if (channel.guild)
+			this.log(`/${channel.guild.id}(${channel.guild.name})/${channel.id}(${channel.name})/${content}`);
+		 else 
+			this.log(`/${channel.id}(DM)/${content}`);
+	},
+	guild: function (content, guild) {
+		//if (guild.members.array().length > 1000) return;
+		//if (config.ignoredGuilds.includes(guild.id)) return;
+		//if (guild.muted) return;
+
+		this.log(`/${guild.id}(${guild.name})/${content}`);
+	},
+	client: function (str) {
+		this.log(str);
+	}
+};
+log.client('Program Started');
+
+// channel
+client.on('message', (message) => log.channel(`${message.author.id}(${message.author.tag})/${message.id}: ${message.content} ${message.attachments.first() ? `\nAttachment: ${message.attachments.first().url}` : ''}`, message.channel));
+client.on('messageDelete', (message) => log.channel(`Message ${message.id} has been deleted.`, message.channel));
+client.on('messageDeleteBulk', (messages) => {
+	var arr = [];
+	messages.array().forEach(message => arr.push(message.id));
+	log.channel(`Messages have been bulk-deleted: ${arr.join(', ')}`, messages.first().channel)
+});
+client.on('messageUpdate', (oldMessage, newMessage) => {
+	if (newMessage.content !== oldMessage.content) log.channel(`Message ${oldMessage.id} has been edited.\nOld content: ${oldMessage.content}\nNew content: ${newMessage.content}`, newMessage.channel);
+});
+client.on('messageReactionAdd', (messageReaction, user) => log.channel(`User ${user.id} (${user.tag}) reacted to message ${messageReaction.message.id} with :${messageReaction.emoji.name}:`, messageReaction.message.channel));
+client.on('messageReactionRemove', (messageReaction, user) => log.channel(`User ${user.id} (${user.tag}) removed reaction :${messageReaction.emoji.name}: from message ${messageReaction.message.id}`, messageReaction.message.channel));
+client.on('messageReactionRemoveAll', (message) => log.channel(`All reactions on message ${message.id} have been removed.`, message.channel));
+client.on('channelCreate', (channel) => log.channel(`Client gained access to channel.`, channel));
+client.on('channelDelete', (channel) => log.channel(`Client lost access to channel.`, channel));
+client.on('channelPinsUpdate', (channel) => log.channel(`Pinned messages have been updated.`, channel));
+client.on('channelUpdate', (oldChannel, newChannel) => {
+	if (newChannel.type === "text") {
+		if (newChannel.name !== oldChannel.name) log.channel(`Channel renamed from #${oldChannel.name} to #${newChannel.name}`, newChannel);
+		if (newChannel.topic !== oldChannel.topic) log.channel(`Topic changed from "${oldChannel.topic}" to "${newChannel.topic}"`, newChannel);
+		if (newChannel.nsfw !== oldChannel.nsfw) log.channel(`NSFW mode is now ${newChannel.nsfw ? 'enabled' : 'disabled'}.`, newChannel);
+		if (newChannel.permissionOverwrites !== oldChannel.permissionOverwrites) log.channel(`Permissions have been updated.`, newChannel);
+		//if (newChannel.position !== oldChannel.position) log.channel(`Channel position has changed to ${newChannel.position}`, newChannel);
+	}
+	if (newChannel.type === "voice") {
+		if (newChannel.name !== oldChannel.name) log.channel(`Channel name changed from "${oldChannel.name}" to "${newChannel.name}"`, newChannel);
+		if (newChannel.bitrate !== oldChannel.bitrate) log.channel(`Bitrate changed from "${oldChannel.bitrate}" to "${newChannel.bitrate}"`, newChannel)
+		if (newChannel.userLimit !== oldChannel.userLimit) log.channel(`User limit changed from "${oldChannel.userLimit}" to "${newChannel.userLimit}"`, newChannel);
+		if (newChannel.permissionOverwrites !== oldChannel.permissionOverwrites)  log.channel(`Permissions have been updated.`, newChannel);
+	}
+});
+
+// guild
+client.on('guildBanAdd', (guild, user) => log.guild(`User ${user.id} (${user.tag}) has been banned.`, guild));
+client.on('guildBanRemove', (guild, user) => log.guild(`User ${user.id} (${user.tag}) has been unbanned.`, guild));
+client.on('guildMemberAdd', (member) => log.guild(`User ${member.user.id} (${member.user.tag}) joined the guild.`, member.guild));
+client.on('guildMemberRemove', (member) => log.guild(`User ${member.user.id} (${member.user.tag}) left the guild.`, member.guild));
+client.on('guildMemberUpdate', (oldMember, newMember) => {
+	if (newMember.nickname !== oldMember.nickname) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) changed their nickname from "${oldMember.nickname || '(none)'}" to "${newMember.nickname || '(none)'}"`, newMember.guild);
+	if (newMember.roles !== oldMember.roles) log.guild(`Roles on user ${newMember.user.id} (${newMember.user.tag}) have been updated.`, newMember.guild);
+	if (newMember.serverMute !== oldMember.serverMute) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) has been ${newMember.serverMute ? '' : 'un-'}server-muted.`, newMember.guild);
+	if (newMember.serverDeaf !== oldMember.serverDeaf) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) has been ${newMember.serverMute ? '' : 'un-'}server-deafened.`, newMember.guild);
+});
+client.on('voiceStateUpdate', (oldMember, newMember) => {
+	if (newMember.voiceChannel !== oldMember.voiceChannel) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) ${newMember.voiceChannel ? `joined voice channel "${newMember.voiceChannel.name}"` : 'left voice channel.'}`, newMember.guild);
+});
+client.on('emojiCreate', (emoji) => log.guild(`Emoji "${emoji.identifier}" has been created. URL: ${emoji.url}`, emoji.guild));
+client.on('emojiDelete', (emoji) => log.guild(`Emoji "${emoji.identifier}" has been deleted. URL: ${emoji.url}`, emoji.guild));
+client.on('emojiUpdate', (oldEmoji, newEmoji) => {
+	if (newEmoji.name !== oldEmoji.name) log.guild(`Emoji "${oldEmoji.identifier}" has been renamed to ${newEmoji.name}`, newEmoji.guild);
+});
+client.on('roleCreate', role => log.guild(`Role "${role.name}" has been created. ID: ${role.id} Color: ${role.color} Permissions: ${role.permissions} Position: ${role.position}`, role.guild));
+client.on('roleDelete', role => log.guild(`Role "${role.name}" has been deleted. ID: ${role.id} Color: ${role.color} Permissions: ${role.permissions} Position: ${role.position}`, role.guild));
+client.on('roleUpdate', (oldRole, newRole) => {
+	if (newRole.name !== oldRole.name) log.guild(`Role ${oldRole.id} (${oldRole.name}) has been renamed to "${newRole.name}"`, newRole.guild);
+	if (newRole.color !== oldRole.color) log.guild(`Color of role ${oldRole.id} (${oldRole.name}) has changed from ${oldRole.color} to ${newRole.color}`, newRole.guild);
+	if (newRole.position !== oldRole.position) log.guild(`Position of role ${oldRole.id} (${oldRole.name}) changed from ${oldRole.position} to ${newRole.position}`, newRole.guild);
+	if (newRole.permissions !== oldRole.perissions) log.guild(`Permissions of role ${oldRole.id} (${oldRole.name}) changed from ${oldRole.permissions} to ${newRole.permissions}`, newRole.guild);
+});
+
+// client
+client.on('guildCreate', (guild) => log.client(`Client joined guild ${guild.id} (${guild.name})`));
+client.on('guildDelete', (guild) => log.client(`Client left guild ${guild.id} (${guild.name})`));
+client.on('userUpdate', (oldUser, newUser) => {
+	if (newUser.tag !== oldUser.tag) log.client(`User ${newUser.id} changed their username from "${oldUser.tag}" to "${newUser.tag}"`);
+	if (newUser.displayAvatarURL !== oldUser.displayAvatarURL) log.client(`User ${newUser.id} (${newUser.tag}) changed their avatar. Old avatar: ${oldUser.displayAvatarURL} New avatar: ${newUser.displayAvatarURL}`);
+});
+
+client.on('ready', () => log.client('Client Ready'));
+client.on('disconnect', (event) => log.client('Client Websocket Disconnected'));
+client.on('reconnecting', () => log.client('Client Reconnecting to Websocket'));
+client.on('resume', (replayed) => log.client(`Client Resumed. ${replayed}`));
+client.on('warn', (info) => log.client(`WARN: ${info}`));
+/*client.on('debug', (info) => log.client('Debug: '+info));*/
+
+
+
+process.on('exit', () => log.client('Process Exiting'));
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+// local server
+/*(function(){
+	var http = require('http');
+	var server = http.createServer(function(request,response){
+		if (request.method != "POST") return response.end("no");
+		request.on("data", function(data){
+			// data example // {"_id":"setActivity", "type":"WATCHING", "activity":"YouTube"}
+			try {
+				var msg = JSON.parse(data);
+				handleInput(msg);
+			} catch(e) {
+				console.error(e);
+			}
+		});
+		response.end("k");
+	});
+	server.listen(1256);
+})();
+
+function handleInput(msg) {
+	if (msg._id == "setActivity") {
+		client.user.setActivity(msg.activity, {type: msg.type});
+	}
+	// can add other stuff
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+client.on('error', console.error);
