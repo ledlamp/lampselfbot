@@ -153,7 +153,7 @@ client.on('message', async message => {
 				},
 				description: quote.content,
 				timestamp: quote.createdAt,
-				image: (quote.attachments.first() && quote.attachments.first().width) ? quote.attachments.first().url : undefined,
+				image: (quote.attachments.first() && quote.attachments.first().width) ? {url:quote.attachments.first().url} : undefined,
 				footer: {
 					text: quote.id
 				}
