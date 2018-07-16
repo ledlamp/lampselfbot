@@ -3,5 +3,6 @@
 	"dependencies": {
 		"colors": "latest",
 		"discord.js": "github:hydrabolt/discord.js",
+		"node-opus": "latest"
 	}
 }
