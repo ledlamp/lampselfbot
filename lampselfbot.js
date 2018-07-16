@@ -1,3 +1,7 @@
+process.on('unhandledRejection', error => {
+	console.error(error.stack);
+});
+
 var Discord = require('discord.js');
 var fs = require('fs');
 var child_process = require('child_process');
@@ -9,6 +13,7 @@ client.login(config.token);
 client.on('ready', ()=>{
 	client.user.setStatus('invisible');
 });
+client.on('error', console.error);
 
 
 
@@ -19,7 +24,7 @@ client.on('ready', ()=>{
 
 // Commands
 ////////////////////////////////////////////////////////////////////////////////
-client.on('message', message => {
+client.on('message', async message => {
 	if (message.author.id !== client.user.id) return;
 
 	var args = message.content.split(' ');
@@ -67,7 +72,51 @@ client.on('message', message => {
 				break;
 			}
 			
-			case "ping": message.channel.send('pong');
+			case "ping": message.channel.send('pong'); break;
+
+			case "record": {
+				let id = txt(1);
+				let vch = client.channels.get(id);
+				if (!(vch && vch.join)) message.react('⚠️');
+				else {
+					vch.join().then(vcon => {
+						var dp = "rec/" + new Date().toLocaleString();
+						fs.mkdirSync(dp);
+						let rcv = vcon.createReceiver();
+						rcv.userstreams = []; // y d.js no do dis
+						vcon.on("speaking", function(user, speaking){
+							if (!speaking) return;
+							for (let us of rcv.userstreams)
+								if (us.user == user)
+									return;
+							let stream = rcv.createStream(user, {mode:'pcm', end:'manual'});
+							rcv.userstreams.push({user, stream});
+							stream.pipe(fs.createWriteStream(`${dp}/${user.tag.replace(/\//g, ':')}.pcm`));
+						});
+						message.react('🆗');
+					});
+				}
+			}
+			break;
+
+			case "stoprec": {
+				let id = txt(1);
+				let vch = client.channels.get(id);
+				if (!vch) message.react('⚠️');
+				else {
+					let vcon = vch.connection;
+					if (vcon) {
+						vcon.receivers.forEach(rcv => {
+							if (rcv.userstreams) {
+								rcv.userstreams.forEach(us => us.stream.end())
+							}
+						});
+					}
+					vch.leave();
+					message.react('🆗');
+				}
+			}
+			break;
 			
 		}
         
@@ -301,21 +350,3 @@ function handleInput(msg) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-client.on('error', console.error);

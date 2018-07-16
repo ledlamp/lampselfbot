@@ -2,7 +2,6 @@
 	"main": "lampselfbot.js",
 	"dependencies": {
 		"colors": "latest",
-		"discord.js": "hydrabolt/discord.js",
-		"request": "^2.85.0"
+		"discord.js": "github:hydrabolt/discord.js",
 	}
 }
