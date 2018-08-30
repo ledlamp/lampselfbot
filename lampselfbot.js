@@ -1,3 +1,6 @@
+
+/* initialization */
+
 process.on('unhandledRejection', error => {
 	console.error(error.stack);
 });
@@ -13,7 +16,7 @@ client.login(config.token);
 client.on('ready', ()=>{
 	client.user.setStatus('invisible');
 });
-client.on('error', console.error);
+client.on('error', error => console.error(error.stack));
 
 
 
@@ -22,9 +25,9 @@ client.on('error', console.error);
 
 
 
-// Commands
-////////////////////////////////////////////////////////////////////////////////
-client.on('message', async message => {
+/* self commands */
+
+client.on('message', async function(message){
 	if (message.author.id !== client.user.id) return;
 
 	var args = message.content.split(' ');
@@ -44,30 +47,13 @@ client.on('message', async message => {
 				})();
 				break;
 			}
-			/*case ">>": {
-				(new AsyncFunction('message', 'channel', 'guild' , 'send', txt(1)))(message, message.channel, message.guild, function(){message.channel.send.apply(arguments)}).then(
-					res => {
-						if (typeof res == "undefined") return;
-						if (typeof res == "object") {
-							try {
-								res = JSON.stringify(res);
-							} catch(e) {}
-						}
-						message.channel.send('`'+res+'`', {split:{char:''}});
-					},
-					err => {
-						message.channel.send(`\`${err}\``, {split:{char:''}});
-					}
-				);
-				break;
-			}*/ // sux
-			
+
 			case "exec":
 			case "$": {
             	child_process.exec(txt(1), function (error, stdout, stderr) {
-					if (error) return message.channel.send(error);
-					if (stdout) message.channel.send('**stdout:** ' + stdout, {split:{char:''}});
-					if (stderr) message.channel.send('**stderr:** ' + stderr, {split:{char:''}});
+					if (error) message.channel.send(error);
+					if (stdout) message.channel.send(stdout, {split:{char:''}});
+					if (stderr) message.channel.send(stderr, {split:{char:''}});
 				});
 				break;
 			}
@@ -118,38 +104,19 @@ client.on('message', async message => {
 			}
 			break;
 			
-		}
-        
-        /*
-		if (cmd === "ping" ) message.channel.send('pong');
-		if (cmd === ">") {
-			(function(){
-				var output;
-				try {output = eval(txt(1))}
-				catch (error) {output = error}
-				supersay('`'+output+'`', message.channel);
-			})();
-		}
-		if (cmd === "$") {
-			child_process.exec(txt(1), function (error, stdout, stderr) {
-				if (stdout) supersay('**stdout:** ' + stdout, message.channel);
-				if (stderr) supersay('**stderr:** ' + stderr, message.channel);
-			});
-		}*/
-        
-        
+		}    
 	}
 	
 	// quote feature
-	args.some(arg => {
-		if (!( arg.startsWith('>>') && !isNaN(arg.substr(2)) )) return false;
-		message.channel.messages.fetch(arg.substr(2)).then(quote => {
+	for (let arg of args) {
+		if (!( arg.startsWith('>>') && !isNaN(arg.substr(2)) )) continue;
+		message.channel.fetchMessage(arg.substr(2)).then(quote => {
 			if (!quote) return;
-			const embed = {
-				color: (quote.member && quote.member.colorRole && quote.member.colorRole.color) || undefined,
+			let embed = {
+				color: (quote.member && quote.member.displayColor) || undefined,
 				author: {
 					name: (quote.member && quote.member.displayName) || quote.author.username,
-					icon_url: quote.author.avatarURL()
+					icon_url: quote.author.avatarURL
 				},
 				description: quote.content,
 				timestamp: quote.createdAt,
@@ -160,26 +127,13 @@ client.on('message', async message => {
 			};
 			message.edit(undefined, {embed});
 		});
-		return true;
-	});
+		break;
+	}
 
 });
 
 
 
-// Eval Terminal
-/*var stdin = process.openStdin();
-stdin.addListener("data", function(data) {
-	let input = data.toString().trim();
-	let output;
-	try {
-		output = eval(input);
-	}
-	catch (error) {
-		output = error;
-	}
-	console.log(colors.cyan(output));
-});*/
 
 
 
@@ -190,14 +144,8 @@ stdin.addListener("data", function(data) {
 
 
 
+/* logging */
 
-
-
-
-
-
-// Logging
-////////////////////////////////////////////////////////////////////////////////
 var logpath = "discord.log";
 fs.appendFileSync(logpath, '\n\n\n');
 var log = {
@@ -205,7 +153,7 @@ var log = {
 		var date = new Date();
 		var timestamp = date.toLocaleDateString() + " " + date.toLocaleTimeString() + " - ";
 		var line = timestamp + str;
-
+		line = line.replace(/\n/g, "\\n");
 //		console.log(line);
 		fs.appendFileSync(logpath, line + '\n');
 	},
@@ -237,11 +185,7 @@ log.client('Program Started');
 // channel
 client.on('message', (message) => log.channel(`${message.author.id}(${message.author.tag})/${message.id}: ${message.content} ${message.attachments.first() ? `\nAttachment: ${message.attachments.first().url}` : ''}`, message.channel));
 client.on('messageDelete', (message) => log.channel(`Message ${message.id} has been deleted.`, message.channel));
-client.on('messageDeleteBulk', (messages) => {
-	var arr = [];
-	messages.array().forEach(message => arr.push(message.id));
-	log.channel(`Messages have been bulk-deleted: ${arr.join(', ')}`, messages.first().channel)
-});
+client.on('messageDeleteBulk', (messages) => log.channel(`Messages have been bulk-deleted: ${messages.map(m => m.id).join(', ')}`, messages.first().channel));
 client.on('messageUpdate', (oldMessage, newMessage) => {
 	if (newMessage.content !== oldMessage.content) log.channel(`Message ${oldMessage.id} has been edited.\nOld content: ${oldMessage.content}\nNew content: ${newMessage.content}`, newMessage.channel);
 });
@@ -257,7 +201,7 @@ client.on('channelUpdate', (oldChannel, newChannel) => {
 		if (newChannel.topic !== oldChannel.topic) log.channel(`Topic changed from "${oldChannel.topic}" to "${newChannel.topic}"`, newChannel);
 		if (newChannel.nsfw !== oldChannel.nsfw) log.channel(`NSFW mode is now ${newChannel.nsfw ? 'enabled' : 'disabled'}.`, newChannel);
 		if (newChannel.permissionOverwrites !== oldChannel.permissionOverwrites) log.channel(`Permissions have been updated.`, newChannel);
-		//if (newChannel.position !== oldChannel.position) log.channel(`Channel position has changed to ${newChannel.position}`, newChannel);
+		if (newChannel.position !== oldChannel.position) log.channel(`Channel position has changed to ${newChannel.position}`, newChannel);
 	}
 	if (newChannel.type === "voice") {
 		if (newChannel.name !== oldChannel.name) log.channel(`Channel name changed from "${oldChannel.name}" to "${newChannel.name}"`, newChannel);
@@ -280,6 +224,10 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
 });
 client.on('voiceStateUpdate', (oldMember, newMember) => {
 	if (newMember.voiceChannel !== oldMember.voiceChannel) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) ${newMember.voiceChannel ? `joined voice channel "${newMember.voiceChannel.name}"` : 'left voice channel.'}`, newMember.guild);
+});
+client.on('presenceUpdate', (oldMember, newMember)=>{
+	if (newMember.presence.status != oldMember.presence.status) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) status changed from ${oldMember.presence.status} to ${newMember.presence.status}`, newMember.guild);
+	if ((newMember.presence.game && newMember.presence.game.name) != (oldMember.presence.game && oldMember.presence.game.name)) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) is now playing ${newMember.presence.game && newMember.presence.game.name} after playing ${oldMember.presence.game && oldMember.presence.game.name}`, newMember.guild);
 });
 client.on('emojiCreate', (emoji) => log.guild(`Emoji "${emoji.identifier}" has been created. URL: ${emoji.url}`, emoji.guild));
 client.on('emojiDelete', (emoji) => log.guild(`Emoji "${emoji.identifier}" has been deleted. URL: ${emoji.url}`, emoji.guild));
