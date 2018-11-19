@@ -1,4 +1,5 @@
 
+
 /* initialization */
 
 process.on('unhandledRejection', error => {
@@ -17,104 +18,6 @@ client.on('ready', ()=>{
 	client.user.setStatus('invisible');
 });
 client.on('error', error => console.error(error.stack));
-
-
-
-
-
-
-
-
-/* self commands */
-
-client.on('message', async function(message){
-	if (message.author.id !== client.user.id) return;
-
-	var args = message.content.split(' ');
-	var txt = function(i) {return args.slice(i).join(' ');}
-
-	if (message.content.startsWith(config.cmdChar)) {
-        let cmd = args[0].slice(1).toLowerCase();
-		switch (cmd) {
-			
-			case "eval":
-			case ">":{
-				(function(){
-					var output;
-					try {output = eval(txt(1))}
-					catch (error) {output = error}
-					message.channel.send('`'+output+'`', {split:{char:''}});
-				})();
-				break;
-			}
-
-			case "exec":
-			case "$": {
-            	child_process.exec(txt(1), function (error, stdout, stderr) {
-					if (error) message.channel.send(error);
-					if (stdout) message.channel.send(stdout, {split:{char:''}});
-					if (stderr) message.channel.send(stderr, {split:{char:''}});
-				});
-				break;
-			}
-			
-			case "ping": message.channel.send('pong'); break;
-
-			// experimental
-			case "record": {
-				let id = txt(1);
-				let vch = client.channels.get(id);
-				if (!(vch && vch.join)) message.react('⚠️');
-				else {
-					vch.join().then(vcon => {
-						var dp = "rec/" + new Date().toLocaleString();
-						fs.mkdirSync(dp);
-						let rcv = vcon.createReceiver();
-						rcv.userstreams = []; // y d.js no do dis
-						vcon.on("speaking", function(user, speaking){
-							if (!speaking) return;
-							for (let us of rcv.userstreams)
-								if (us.user == user)
-									return;
-							let stream = rcv.createStream(user, {mode:'pcm', end:'manual'});
-							rcv.userstreams.push({user, stream});
-							stream.pipe(fs.createWriteStream(`${dp}/${user.tag.replace(/\//g, ':')}.pcm`));
-						});
-						message.react('🆗');
-					});
-				}
-			}
-			break;
-
-			// experimental
-			case "stoprec": {
-				let id = txt(1);
-				let vch = client.channels.get(id);
-				if (!vch) message.react('⚠️');
-				else {
-					let vcon = vch.connection;
-					if (vcon) {
-						vcon.receivers.forEach(rcv => {
-							if (rcv.userstreams) {
-								rcv.userstreams.forEach(us => us.stream.end())
-							}
-						});
-					}
-					vch.leave();
-					message.react('🆗');
-				}
-			}
-			break;
-			
-		}    
-	}
-
-});
-
-
-
-
-
 
 
 
@@ -239,4 +142,131 @@ client.on('warn', (info) => log.client(`WARN: ${info}`));
 
 exitHook(() => log.client('Process Exiting'));
 
+
+
+
+
+
+
+
+
+
+
+
+
+/* self commands */
+
+client.on('message', async function(message){
+	if (message.author.id !== client.user.id) return;
+
+	var args = message.content.split(' ');
+	var txt = function(i) {return args.slice(i).join(' ');}
+
+	if (message.content.startsWith(config.cmdChar)) {
+        let cmd = args[0].slice(1).toLowerCase();
+		switch (cmd) {
+			
+			case "eval":
+			case ">":{
+				(function(){
+					var output;
+					try {output = eval(txt(1))}
+					catch (error) {output = error}
+					message.channel.send('`'+output+'`', {split:{char:''}});
+				})();
+				break;
+			}
+
+			case "exec":
+			case "$": {
+            	child_process.exec(txt(1), function (error, stdout, stderr) {
+					if (error) message.channel.send(error);
+					if (stdout) message.channel.send(stdout, {split:{char:''}});
+					if (stderr) message.channel.send(stderr, {split:{char:''}});
+				});
+				break;
+			}
+			
+			case "ping": message.channel.send('pong'); break;
+
+			// experimental
+			case "record": {
+				let id = txt(1);
+				let vch = client.channels.get(id);
+				if (!(vch && vch.join)) message.react('⚠️');
+				else {
+					vch.join().then(vcon => {
+						var dp = "rec/" + new Date().toLocaleString();
+						fs.mkdirSync(dp);
+						let rcv = vcon.createReceiver();
+						rcv.userstreams = []; // y d.js no do dis
+						vcon.on("speaking", function(user, speaking){
+							if (!speaking) return;
+							for (let us of rcv.userstreams)
+								if (us.user == user)
+									return;
+							let stream = rcv.createStream(user, {mode:'pcm', end:'manual'});
+							rcv.userstreams.push({user, stream});
+							stream.pipe(fs.createWriteStream(`${dp}/${user.tag.replace(/\//g, ':')}.pcm`));
+						});
+						message.react('🆗');
+					});
+				}
+			}
+			break;
+
+			// experimental
+			case "stoprec": {
+				let id = txt(1);
+				let vch = client.channels.get(id);
+				if (!vch) message.react('⚠️');
+				else {
+					let vcon = vch.connection;
+					if (vcon) {
+						vcon.receivers.forEach(rcv => {
+							if (rcv.userstreams) {
+								rcv.userstreams.forEach(us => us.stream.end())
+							}
+						});
+					}
+					vch.leave();
+					message.react('🆗');
+				}
+			}
+			break;
+			
+		}    
+	}
+
+});
+
+
+
+
+/* notify me if someone mentioned a keyword */
+
+{
+	let webhook = config.mentionChannelWebhook;
+	webhook = new Discord.WebhookClient(webhook.id, webhook.token);
+	client.on("message", message => {
+		for (let keyword of config.mentionKeywords) {
+			if (message.content.toLowerCase().includes(keyword)) {
+				webhook.send(`<@${client.user.id}> https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`, {embed:{
+					color: (message.member && message.member.displayColor) || undefined,
+					author: {
+						name: (message.member && message.member.displayName) || message.author.username,
+						icon_url: message.author.avatarURL
+					},
+					description: message.content,
+					timestamp: message.createdAt,
+					image: (message.attachments.first() && message.attachments.first().width) ? {url:message.attachments.first().url} : undefined,
+					footer: {
+						text: message.id
+					}
+				}});
+				break;
+			}
+		}
+	});
+}
 
