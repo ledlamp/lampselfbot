@@ -261,7 +261,7 @@ client.on('message', async function(message){
 					timestamp: message.createdAt,
 					image: (message.attachments.first() && message.attachments.first().width) ? {url:message.attachments.first().url} : undefined,
 					footer: {
-						text: message.id
+						text: `${message.guild.name} ▶︎ #${message.channel.name}`
 					}
 				}]});
 				break;
