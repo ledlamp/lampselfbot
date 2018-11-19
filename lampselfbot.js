@@ -106,29 +106,6 @@ client.on('message', async function(message){
 		}    
 	}
 	
-	// quote feature
-	for (let arg of args) {
-		if (!( arg.startsWith('>>') && !isNaN(arg.substr(2)) )) continue;
-		message.channel.fetchMessage(arg.substr(2)).then(quote => {
-			if (!quote) return;
-			let embed = {
-				color: (quote.member && quote.member.displayColor) || undefined,
-				author: {
-					name: (quote.member && quote.member.displayName) || quote.author.username,
-					icon_url: quote.author.avatarURL
-				},
-				description: quote.content,
-				timestamp: quote.createdAt,
-				image: (quote.attachments.first() && quote.attachments.first().width) ? {url:quote.attachments.first().url} : undefined,
-				footer: {
-					text: quote.id
-				}
-			};
-			message.edit(undefined, {embed});
-		});
-		break;
-	}
-
 });
 
 
