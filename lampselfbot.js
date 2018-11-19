@@ -59,6 +59,7 @@ client.on('message', async function(message){
 			
 			case "ping": message.channel.send('pong'); break;
 
+			// experimental
 			case "record": {
 				let id = txt(1);
 				let vch = client.channels.get(id);
@@ -84,6 +85,7 @@ client.on('message', async function(message){
 			}
 			break;
 
+			// experimental
 			case "stoprec": {
 				let id = txt(1);
 				let vch = client.channels.get(id);
@@ -105,7 +107,7 @@ client.on('message', async function(message){
 			
 		}    
 	}
-	
+
 });
 
 
@@ -234,43 +236,4 @@ client.on('resume', (replayed) => log.client(`Client Resumed. ${replayed}`));
 client.on('warn', (info) => log.client(`WARN: ${info}`));
 /*client.on('debug', (info) => log.client('Debug: '+info));*/
 
-
-
 process.on('exit', () => log.client('Process Exiting'));
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-// local server
-/*(function(){
-	var http = require('http');
-	var server = http.createServer(function(request,response){
-		if (request.method != "POST") return response.end("no");
-		request.on("data", function(data){
-			// data example // {"_id":"setActivity", "type":"WATCHING", "activity":"YouTube"}
-			try {
-				var msg = JSON.parse(data);
-				handleInput(msg);
-			} catch(e) {
-				console.error(e);
-			}
-		});
-		response.end("k");
-	});
-	server.listen(1256);
-})();
-
-function handleInput(msg) {
-	if (msg._id == "setActivity") {
-		client.user.setActivity(msg.activity, {type: msg.type});
-	}
-	// can add other stuff
-}*/
-
-
-
-
