@@ -224,10 +224,10 @@ client.on('guildMemberUpdate', (oldMember, newMember) => {
 client.on('voiceStateUpdate', (oldMember, newMember) => {
 	if (newMember.voiceChannel !== oldMember.voiceChannel) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) ${newMember.voiceChannel ? `joined voice channel "${newMember.voiceChannel.name}"` : 'left voice channel.'}`, newMember.guild);
 });
-client.on('presenceUpdate', (oldMember, newMember)=>{
+/*client.on('presenceUpdate', (oldMember, newMember)=>{
 	if (newMember.presence.status != oldMember.presence.status) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) status changed from ${oldMember.presence.status} to ${newMember.presence.status}`, newMember.guild);
 	if ((newMember.presence.game && newMember.presence.game.name) != (oldMember.presence.game && oldMember.presence.game.name)) log.guild(`User ${newMember.user.id} (${newMember.user.tag}) is now playing ${newMember.presence.game && newMember.presence.game.name} after playing ${oldMember.presence.game && oldMember.presence.game.name}`, newMember.guild);
-});
+});*/
 client.on('emojiCreate', (emoji) => log.guild(`Emoji "${emoji.identifier}" has been created. URL: ${emoji.url}`, emoji.guild));
 client.on('emojiDelete', (emoji) => log.guild(`Emoji "${emoji.identifier}" has been deleted. URL: ${emoji.url}`, emoji.guild));
 client.on('emojiUpdate', (oldEmoji, newEmoji) => {
