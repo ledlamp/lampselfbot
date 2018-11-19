@@ -2,6 +2,7 @@
 	"main": "lampselfbot.js",
 	"dependencies": {
 		"discord.js": "^11.4.2",
+		"exit-hook": "^2.0.0",
 		"node-opus": "^0.3.1"
 	}
 }

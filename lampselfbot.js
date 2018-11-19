@@ -8,6 +8,7 @@ process.on('unhandledRejection', error => {
 var Discord = require('discord.js');
 var fs = require('fs');
 var child_process = require('child_process');
+var exitHook = require('exit-hook');
 
 var config = require('./config.json');
 var client = new Discord.Client();
@@ -236,4 +237,6 @@ client.on('resume', (replayed) => log.client(`Client Resumed. ${replayed}`));
 client.on('warn', (info) => log.client(`WARN: ${info}`));
 /*client.on('debug', (info) => log.client('Debug: '+info));*/
 
-process.on('exit', () => log.client('Process Exiting'));
+exitHook(() => log.client('Process Exiting'));
+
+
