@@ -251,7 +251,7 @@ client.on('message', async function(message){
 	client.on("message", message => {
 		for (let keyword of config.mentionKeywords) {
 			if (message.content.toLowerCase().includes(keyword)) {
-				webhook.send(`<@${client.user.id}> https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`, {embed:{
+				webhook.send(`<@${client.user.id}> https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`, {embeds:[{
 					color: (message.member && message.member.displayColor) || undefined,
 					author: {
 						name: (message.member && message.member.displayName) || message.author.username,
@@ -263,7 +263,7 @@ client.on('message', async function(message){
 					footer: {
 						text: message.id
 					}
-				}});
+				}]});
 				break;
 			}
 		}
