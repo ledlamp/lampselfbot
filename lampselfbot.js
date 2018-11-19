@@ -8,7 +8,6 @@ process.on('unhandledRejection', error => {
 var Discord = require('discord.js');
 var fs = require('fs');
 var child_process = require('child_process');
-var colors = require('colors');
 
 var config = require('./config.json');
 var client = new Discord.Client();

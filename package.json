@@ -1,8 +1,7 @@
 {
 	"main": "lampselfbot.js",
 	"dependencies": {
-		"colors": "latest",
 		"discord.js": "^11.4.2",
-		"node-opus": "latest"
+		"node-opus": "^0.3.1"
 	}
 }
