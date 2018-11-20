@@ -248,11 +248,11 @@ client.on('message', async function(message){
 {
 	let webhook = config.mentionChannelWebhook;
 	webhook = new Discord.WebhookClient(webhook.id, webhook.token);
-	client.on("message", message => {
+	client.on("message", async message => {
 		if (message.author.bot || message.author.id == client.user.id) return;
 		for (let keyword of config.mentionKeywords) {
 			if (message.content.toLowerCase().includes(keyword)) {
-				webhook.send(`<@${client.user.id}> https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`, {embeds:[{
+				webhook.send(`<@${client.user.id}> https://discordapp.com/channels/${message.guild ? : message.guild.id + "/" : ""}${message.channel.id}/${message.id}`, {embeds:[{
 					color: (message.member && message.member.displayColor) || undefined,
 					author: {
 						name: (message.member && message.member.displayName) || message.author.username,
