@@ -40,22 +40,14 @@ var log = {
 		fs.appendFileSync(logpath, line + '\n');
 	},
 	channel: function (content, channel) {
-		//if (channel.guild && channel.guild.members.array().length > 1000) return;
-		//if (channel.guild && config.ignoredGuilds.includes(channel.guild.id)) return;
-		//if (config.ignoredChannels.includes(channel.id)) return; 
-		//if (channel.parent && config.ignoredChannels.includes(channel.parent.id)) return;
-		//if (channel.muted || (channel.parent && channel.parent.muted) || (channel.guild && channel.guild.muted)) return;
-
+		if (channel.guild && channel.guild.muted) return;
 		if (channel.guild)
 			this.log(`/${channel.guild.id}(${channel.guild.name})/${channel.id}(${channel.name})/${content}`);
 		 else 
 			this.log(`/${channel.id}(DM)/${content}`);
 	},
 	guild: function (content, guild) {
-		//if (guild.members.array().length > 1000) return;
-		//if (config.ignoredGuilds.includes(guild.id)) return;
-		//if (guild.muted) return;
-
+		if (guild.muted) return;
 		this.log(`/${guild.id}(${guild.name})/${content}`);
 	},
 	client: function (str) {
@@ -249,7 +241,7 @@ client.on('message', async function(message){
 	let webhook = config.mentionChannelWebhook;
 	webhook = new Discord.WebhookClient(webhook.id, webhook.token);
 	client.on("message", async message => {
-		if (message.author.bot || message.author.id == client.user.id || !message.guild) return;
+		if (message.author.bot || message.author.id == client.user.id || !message.guild || message.guild.muted) return;
 		for (let keyword of config.mentionKeywords) {
 			if (message.content.toLowerCase().includes(keyword)) {
 				webhook.send(`<@${client.user.id}> https://discordapp.com/channels/${message.guild ? message.guild.id + "/" : ""}${message.channel.id}/${message.id}`, {embeds:[{
