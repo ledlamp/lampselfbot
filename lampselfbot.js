@@ -154,7 +154,7 @@ client.on('message', async function(message){
 	var args = message.content.split(' ');
 	var txt = function(i) {return args.slice(i).join(' ');}
 
-	if (message.content.startsWith(config.cmdChar)) {
+	if (message.content.startsWith('~')) {
         let cmd = args[0].slice(1).toLowerCase();
 		switch (cmd) {
 			
