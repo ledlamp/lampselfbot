@@ -148,7 +148,7 @@ exitHook(() => log.client('Process Exiting'));
 
 /* self commands */
 
-client.on('message', async function(message){
+client.on('message', message => (async function(message){
 	if (message.author.id !== client.user.id) return;
 
 	var args = message.content.split(' ');
@@ -159,25 +159,23 @@ client.on('message', async function(message){
 		switch (cmd) {
 			
 			case "eval":
-			case ">":{
-				(function(){
-					var output;
-					try {output = eval(txt(1))}
-					catch (error) {output = error}
+			case ">":
+				with (message) {
+					let output;
+					try { output = eval(txt(1)) }
+					catch (error) { output = error }
 					message.channel.send('`'+output+'`', {split:{char:''}});
-				})();
+				}
 				break;
-			}
 
 			case "exec":
-			case "$": {
-            	child_process.exec(txt(1), function (error, stdout, stderr) {
+			case "$":
+				child_process.exec(txt(1), function (error, stdout, stderr) {
 					if (error) message.channel.send(error);
 					if (stdout) message.channel.send(stdout, {split:{char:''}});
 					if (stderr) message.channel.send(stderr, {split:{char:''}});
 				});
 				break;
-			}
 			
 			case "ping": message.channel.send('pong'); break;
 
@@ -230,7 +228,7 @@ client.on('message', async function(message){
 		}    
 	}
 
-});
+}).call(message, message));
 
 
 
