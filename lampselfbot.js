@@ -40,14 +40,14 @@ var log = {
 		fs.appendFileSync(logpath, line + '\n');
 	},
 	channel: function (content, channel) {
-		if (channel.guild && channel.guild.muted) return;
+		//if (channel.guild && channel.guild.muted) return;
 		if (channel.guild)
 			this.log(`/${channel.guild.id}(${channel.guild.name})/${channel.id}(${channel.name})/${content}`);
 		 else 
 			this.log(`/${channel.id}(DM)/${content}`);
 	},
 	guild: function (content, guild) {
-		if (guild.muted) return;
+		//if (guild.muted) return;
 		this.log(`/${guild.id}(${guild.name})/${content}`);
 	},
 	client: function (str) {
