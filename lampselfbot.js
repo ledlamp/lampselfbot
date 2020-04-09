@@ -233,6 +233,10 @@ client.on('message', message => (async function(message){
 
 
 
+
+
+
+
 /* notify me if someone mentioned a keyword */
 
 {
@@ -260,4 +264,40 @@ client.on('message', message => (async function(message){
 		}
 	});
 }
+
+
+
+
+
+
+
+
+/* embed linked messages */
+
+client.on("message", async function (message) {
+	if (message.author.id !== client.user.id) return;
+	let mlm = message.content.match(/https:\/\/discordapp\.com\/channels\/(\d+)\/(\d+)\/(\d+)/);
+	if (!mlm) return;
+	let lmc = client.channels.get(mlm[2]);
+	if (!lmc) return;
+	let lm = await lmc.fetchMessage(mlm[3]);
+	if (!lm) return;
+	let lme = {
+		color: (lm.member && lm.member.displayColor) || undefined,
+		author: {
+			name: (lm.member && lm.member.displayName) || lm.author.username,
+			icon_url: lm.author.avatarURL
+		},
+		description: lm.content,
+		timestamp: lm.createdAt,
+		image: (lm.attachments.first() && lm.attachments.first().width) ? {url:lm.attachments.first().url} : undefined,
+		footer: {
+			text: lm.channel == message.channel ? (lm.channel && `#${lm.channel.name}`) : lm.guild ? `${lm.guild.name} ▶︎ #${lm.channel.name}` : undefined
+		}
+	};
+	let mlpi = message.content.indexOf(mlm[0]) + mlm[0].length;
+	let mmc = message.content.substring(0, mlpi) + ` <@${lm.author.id}>` + message.content.substring(mlpi);
+	await message.edit(mmc, {embed: lme});
+});
+
 
