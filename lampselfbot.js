@@ -303,3 +303,25 @@ client.on("message", async function (message) {
 });
 
 
+
+
+/* fake nitro for solitary emoji */
+
+client.on("message", async message => {
+	if (message.author == client.user && message.content.startsWith(':') && message.content.endsWith(':')) {
+		let name = message.content.slice(1, -1);
+		let emoji = client.emojis.find(x => x.name == name);
+		if (!emoji) return;
+		message.delete();
+		let cachedpath = `.emojicache/${emoji.url.split('/').pop()}`;
+		if (fs.existsSync(cachedpath)) {
+			await message.channel.send(new Discord.Attachment(cachedpath));
+		} else {
+			let buf = (await require('snekfetch').get(emoji.url)).body;
+			await require('sharp')(buf).resize(48,48,{fit:'inside'}).toFile(cachedpath);
+			await message.channel.send(new Discord.Attachment(buf, `${emoji.name}.${emoji.url.split('.').pop()}`));
+		}
+	}
+});
+
+
