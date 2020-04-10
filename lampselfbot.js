@@ -313,13 +313,15 @@ client.on("message", async message => {
 		let emoji = client.emojis.find(x => x.name == name);
 		if (!emoji) return;
 		message.delete();
+		if (!fs.existsSync('.emojicache')) fs.mkdirSync('.emojicache');
 		let cachedpath = `.emojicache/${emoji.url.split('/').pop()}`;
 		if (fs.existsSync(cachedpath)) {
 			await message.channel.send(new Discord.Attachment(cachedpath));
 		} else {
-			let buf = (await require('snekfetch').get(emoji.url)).body;
-			await require('sharp')(buf).resize(48,48,{fit:'inside'}).toFile(cachedpath);
-			await message.channel.send(new Discord.Attachment(buf, `${emoji.name}.${emoji.url.split('.').pop()}`));
+			let emojibuf = (await require('snekfetch').get(emoji.url)).body;
+			let rszbuf = require('sharp')(emojibuf).resize(48,48,{fit:'inside'}).toBuffer();
+			await message.channel.send(new Discord.Attachment(rszbuf, `${emoji.name}.${emoji.url.split('.').pop()}`));
+			fs.writeFileSync(rszbuf, cachedpath);
 		}
 	}
 });
