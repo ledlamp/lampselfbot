@@ -321,7 +321,7 @@ client.on("message", async message => {
 			let emojibuf = (await require('snekfetch').get(emoji.url)).body;
 			let rszbuf = await require('sharp')(emojibuf).resize(48,48,{fit:'inside'}).toBuffer();
 			await message.channel.send(new Discord.Attachment(rszbuf, `${emoji.name}.${emoji.url.split('.').pop()}`));
-			fs.writeFileSync(rszbuf, cachedpath);
+			fs.writeFileSync(cachedpath, rszbuf);
 		}
 	}
 });
