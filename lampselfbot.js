@@ -292,7 +292,7 @@ client.on("message", async function (message) {
 		timestamp: lm.createdAt,
 		image: (lm.attachments.first() && lm.attachments.first().width) ? {url:lm.attachments.first().url} : undefined,
 		footer: {
-			text: lm.guild && lm.channel != message.channel && `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}`
+			text: lm.guild ? lm.channel != message.channel && `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
 		}
 	};
 	let mlpi = message.content.indexOf(mlm[0]) + mlm[0].length;
