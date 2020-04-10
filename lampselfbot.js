@@ -322,10 +322,12 @@ client.on("message", async message => {
 			let rszbuf;
 			if (emoji.animated) {
 				rszbuf = await new Promise(function(resolve,reject){
-					require("child_process").execFile("gifsicle", ['-', '--resize-touch', '48x48'], function(err,stdout,stderr){
+					let cp = require("child_process").execFile("gifsicle", ['-', '--resize-touch', '48x48'], {encoding: 'buffer'}, function(err,stdout,stderr){
 						if (err) return reject(err);
 						resolve(stdout);
-					}).stdin.write(emojibuf);
+					});
+					cp.stdin.write(emojibuf);
+					cp.stdin.end();
 				});
 			} else {
 				rszbuf = await require('sharp')(emojibuf).resize(48,48,{fit:'inside'}).toBuffer();
