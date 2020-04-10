@@ -276,7 +276,7 @@ client.on('message', message => (async function(message){
 
 client.on("message", async function (message) {
 	if (message.author.id !== client.user.id) return;
-	let mlm = message.content.match(/https:\/\/discordapp\.com\/channels\/(\d+)\/(\d+)\/(\d+)/);
+	let mlm = message.content.match(/https:\/\/discordapp\.com\/channels\/(\d+|@me)\/(\d+)\/(\d+)/);
 	if (!mlm) return;
 	let lmc = client.channels.get(mlm[2]);
 	if (!lmc) return;
@@ -292,7 +292,7 @@ client.on("message", async function (message) {
 		timestamp: lm.createdAt,
 		image: (lm.attachments.first() && lm.attachments.first().width) ? {url:lm.attachments.first().url} : undefined,
 		footer: {
-			text: lm.channel == message.channel ? (lm.channel && `#${lm.channel.name}`) : lm.guild ? `${lm.guild.name} ▶︎ #${lm.channel.name}` : undefined
+			text: lm.guild && lm.channel != message.channel && `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}`
 		}
 	};
 	let mlpi = message.content.indexOf(mlm[0]) + mlm[0].length;
