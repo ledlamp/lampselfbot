@@ -298,6 +298,8 @@ client.on("message", async function (message) {
 	let mlpi = message.content.indexOf(mlm[0]) + mlm[0].length;
 	let mmc = message.content.substring(0, mlpi) + ` <@${lm.author.id}>` + message.content.substring(mlpi);
 	await message.edit(mmc, {embed: lme});
+	// mentions in edits don't have effect; little hack to work-around :jacc:
+	(await message.channel.send(`<@${lm.author.id}>`)).delete();
 });
 
 
