@@ -295,11 +295,7 @@ client.on("message", async function (message) {
 			text: (lm.guild && lm.channel != message.channel) ? `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
 		}
 	};
-	let mlpi = message.content.indexOf(mlm[0]) + mlm[0].length;
-	let mmc = message.content.substring(0, mlpi) + ` <@${lm.author.id}>` + message.content.substring(mlpi);
-	await message.edit(mmc, {embed: lme});
-	// mentions in edits don't have effect; little hack to work-around :jacc:
-	(await message.channel.send(`<@${lm.author.id}>`)).delete();
+	await message.edit(undefined, {embed: lme});
 });
 
 
