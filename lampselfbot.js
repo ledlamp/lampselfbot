@@ -276,7 +276,7 @@ client.on('message', message => (async function(message){
 
 client.on("message", async function (message) {
 	if (message.author.id !== client.user.id) return;
-	let mlm = message.content.match(/https:\/\/(?:ptb\.|canary\.|)?(?:discord\.com|discordapp\.com)\/channels\/(\d+|@me)\/(\d+)\/(\d+));
+	let mlm = message.content.match(/https:\/\/(?:ptb\.|canary\.|)?(?:discord\.com|discordapp\.com)\/channels\/(\d+|@me)\/(\d+)\/(\d+)/);
 	if (!mlm) return;
 	let lmc = client.channels.get(mlm[2]);
 	if (!lmc) return;
