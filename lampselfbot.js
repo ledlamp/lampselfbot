@@ -335,3 +335,44 @@ client.on("message", async message => {
 });
 
 
+
+
+
+/* cycle custom status */
+client.once("ready", async function() {
+	let i = 0, sa = [], ls, b = Date.now();
+	client.statusInterval = client.setInterval(async function() {
+		let s = sa[i++]
+		if (s === undefined) {
+			if (client.user.note) {
+				sa = client.user.note.split('\n');
+				i = 0;
+				s = sa[i++]
+			}
+			else {
+				if (ls) {
+					setCs("")
+				}
+			};
+		}
+		if (ls == s) return;
+		setCs(s)
+		function setCs(s) {
+			ls = s;
+			client.ws.send({
+				"op": 3,
+				"d": {
+					"status": "invisible",
+					"game": {
+						"name": "Custom Status",
+						"type": 4,
+						"state": s.substr(0, 128)
+					},
+					"afk": true,
+					"since": b
+				}
+			})
+		}
+	}, 5000);
+})
+
