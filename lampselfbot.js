@@ -310,9 +310,11 @@ client.on("message", async message => {
 		if (!emoji) return;
 		message.delete();
 		if (!fs.existsSync('.emojicache')) fs.mkdirSync('.emojicache');
+		let emoji_ext = emoji.url.split('.').pop();
+		let emoji_friendly_file_name = `${emoji.name}.${emoji_ext}`;
 		let cachedpath = `.emojicache/${emoji.url.split('/').pop()}`;
 		if (fs.existsSync(cachedpath)) {
-			await message.channel.send(new Discord.Attachment(cachedpath));
+			await message.channel.send(new Discord.Attachment(cachedpath, emoji_friendly_file_name));
 		} else {
 			let emojibuf = (await require('snekfetch').get(emoji.url)).body;
 			let rszbuf;
@@ -328,7 +330,7 @@ client.on("message", async message => {
 			} else {
 				rszbuf = await require('sharp')(emojibuf).resize(48,48,{fit:'inside'}).toBuffer();
 			}
-			await message.channel.send(new Discord.Attachment(rszbuf, `${emoji.name}.${emoji.url.split('.').pop()}`));
+			await message.channel.send(new Discord.Attachment(rszbuf, emoji_friendly_file_name));
 			fs.writeFileSync(cachedpath, rszbuf);
 		}
 	}
