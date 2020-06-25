@@ -3,7 +3,7 @@
 /* initialization */
 
 process.on('unhandledRejection', error => {
-	console.error(error.stack);
+	console.error(error.stack || error);
 });
 
 var Discord = require('discord.js');
