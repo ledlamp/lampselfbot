@@ -17,7 +17,7 @@ client.login(config.token);
 client.on('ready', ()=>{
 	client.user.setStatus('invisible');
 });
-client.on('error', error => console.error(error.stack));
+client.on('error', error => console.error(error.stack || error));
 
 
 
