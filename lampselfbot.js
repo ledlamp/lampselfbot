@@ -282,6 +282,10 @@ client.on("message", async function (message) {
 	if (!lmc) return;
 	let lm = await lmc.fetchMessage(mlm[3]);
 	if (!lm) return;
+	let imageCandidate = lm.attachments.find(a => [".png",".jpg",".jpeg",".webp",".gif"].some(e => a.url.toLowerCase().endsWith(e)));
+	if (imageCandidate) imageCandidate["will be used for the image of the embed"] = true;
+	else imageCandidate = lm.embeds.find(e => e.type == 'image');
+	let attachments = lm.attachments.filter(a => !a["will be used for the image of the embed"]).map(a => `[${a.name}](${a.url})`).join('\n');
 	let lme = {
 		color: (lm.member && lm.member.displayColor) || undefined,
 		author: {
@@ -290,9 +294,13 @@ client.on("message", async function (message) {
 		},
 		description: lm.content,
 		timestamp: lm.createdAt,
-		image: (lm.attachments.first() && lm.attachments.first().width) ? {url:lm.attachments.first().url} : undefined,
+		image: imageCandidate && imageCandidate.url,
+		fields: attachments ? [
+			{name: "Attachments", value: attachments}
+		] : undefined,
 		footer: {
-			text: (lm.guild && lm.channel != message.channel) ? `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
+			icon_url: lm.channel != message.channel ? lm.guild ? lm.guild.iconURL : lm.author.avatarURL : undefined,
+			text: lm.channel != message.channel ? lm.channel.type == 'dm' ? `@${lm.recipient.tag}` : `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
 		}
 	};
 	await message.edit(undefined, {embed: lme});
