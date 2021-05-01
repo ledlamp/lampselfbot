@@ -299,7 +299,7 @@ client.on("message", async function (message) {
 			{name: "Attachments", value: attachments}
 		] : undefined,
 		footer: {
-			icon_url: lm.channel != message.channel ? lm.guild ? lm.guild.iconURL : lm.recipient.avatarURL : undefined,
+			icon_url: lm.channel != message.channel ? lm.guild ? lm.guild.iconURL : lm.channel.recipient.avatarURL : undefined,
 			text: lm.channel != message.channel ? lm.channel.type == 'dm' ? `@${lm.channel.recipient.tag}` : `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
 		}
 	};
