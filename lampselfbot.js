@@ -300,7 +300,7 @@ client.on("message", async function (message) {
 		] : undefined,
 		footer: {
 			icon_url: lm.channel != message.channel ? lm.guild ? lm.guild.iconURL : lm.channel.recipient.avatarURL : undefined,
-			text: lm.channel != message.channel ? lm.channel.type == 'dm' ? `@${lm.channel.recipient.tag}` : `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
+			text: lm.channel != message.channel ? lm.channel.type == 'dm' ? `@${lm.channel.recipient.username}` : `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
 		}
 	};
 	await message.edit(undefined, {embed: lme});
