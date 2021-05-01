@@ -294,12 +294,12 @@ client.on("message", async function (message) {
 		},
 		description: lm.content,
 		timestamp: lm.createdAt,
-		image: imageCandidate && imageCandidate.url,
+		image: imageCandidate && {url: imageCandidate.url},
 		fields: attachments ? [
 			{name: "Attachments", value: attachments}
 		] : undefined,
 		footer: {
-			icon_url: lm.channel != message.channel ? lm.guild ? lm.guild.iconURL : lm.author.avatarURL : undefined,
+			icon_url: lm.channel != message.channel ? lm.guild ? lm.guild.iconURL : lm.recipient.avatarURL : undefined,
 			text: lm.channel != message.channel ? lm.channel.type == 'dm' ? `@${lm.channel.recipient.tag}` : `${lm.guild != message.guild ? `${lm.guild.name} ▶︎ ` : ''}#${lm.channel.name}` : undefined
 		}
 	};
